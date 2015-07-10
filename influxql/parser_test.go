@@ -1030,12 +1030,11 @@ func TestParser_ParseStatement(t *testing.T) {
 			},
 		},
 
-		// GRANT cluster admin
+		// GRANT admin privilege
 		{
 			s: `GRANT ALL PRIVILEGES TO jdoe`,
-			stmt: &influxql.GrantStatement{
-				Privilege: influxql.AllPrivileges,
-				User:      "jdoe",
+			stmt: &influxql.GrantAdminStatement{
+				User: "jdoe",
 			},
 		},
 
@@ -1043,9 +1042,8 @@ func TestParser_ParseStatement(t *testing.T) {
 		{
 			s: `REVOKE READ on testdb FROM jdoe`,
 			stmt: &influxql.RevokeStatement{
-				Privilege: influxql.ReadPrivilege,
-				On:        "testdb",
-				User:      "jdoe",
+				On:   "testdb",
+				User: "jdoe",
 			},
 		},
 
@@ -1053,9 +1051,8 @@ func TestParser_ParseStatement(t *testing.T) {
 		{
 			s: `REVOKE WRITE ON testdb FROM jdoe`,
 			stmt: &influxql.RevokeStatement{
-				Privilege: influxql.WritePrivilege,
-				On:        "testdb",
-				User:      "jdoe",
+				On:   "testdb",
+				User: "jdoe",
 			},
 		},
 
@@ -1063,9 +1060,8 @@ func TestParser_ParseStatement(t *testing.T) {
 		{
 			s: `REVOKE ALL ON testdb FROM jdoe`,
 			stmt: &influxql.RevokeStatement{
-				Privilege: influxql.AllPrivileges,
-				On:        "testdb",
-				User:      "jdoe",
+				On:   "testdb",
+				User: "jdoe",
 			},
 		},
 
@@ -1073,18 +1069,16 @@ func TestParser_ParseStatement(t *testing.T) {
 		{
 			s: `REVOKE ALL PRIVILEGES ON testdb FROM jdoe`,
 			stmt: &influxql.RevokeStatement{
-				Privilege: influxql.AllPrivileges,
-				On:        "testdb",
-				User:      "jdoe",
+				On:   "testdb",
+				User: "jdoe",
 			},
 		},
 
-		// REVOKE cluster admin
+		// REVOKE admin privilege
 		{
 			s: `REVOKE ALL FROM jdoe`,
-			stmt: &influxql.RevokeStatement{
-				Privilege: influxql.AllPrivileges,
-				User:      "jdoe",
+			stmt: &influxql.RevokeAdminStatement{
+				User: "jdoe",
 			},
 		},
 

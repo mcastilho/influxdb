@@ -312,6 +312,25 @@ func TestStatementExecutor_ExecuteStatement_Grant_Err(t *testing.T) {
 	}
 }
 
+// Ensure a GRANT statement for admin privilege can be executed.
+func TestStatementExecutor_ExecuteStatement_Grant_Admin(t *testing.T) {
+	e := NewStatementExecutor()
+	e.Store.SetAdminPrivilegeFn = func(username string, admin bool) error {
+		if username != "susy" {
+			t.Fatalf("unexpected username: %s", username)
+		} else if admin != true {
+			t.Fatalf("unexpected admin privilege: %s", admin)
+		}
+		return nil
+	}
+
+	if res := e.ExecuteStatement(influxql.MustParseStatement(`GRANT ALL TO susy`)); res.Err != nil {
+		t.Fatal(res.Err)
+	} else if res.Series != nil {
+		t.Fatalf("unexpected rows: %#v", res.Series)
+	}
+}
+
 // Ensure a REVOKE statement can be executed.
 func TestStatementExecutor_ExecuteStatement_Revoke(t *testing.T) {
 	e := NewStatementExecutor()
@@ -342,6 +361,25 @@ func TestStatementExecutor_ExecuteStatement_Revoke_Err(t *testing.T) {
 
 	if res := e.ExecuteStatement(influxql.MustParseStatement(`REVOKE ALL PRIVILEGES ON foo FROM susy`)); res.Err == nil || res.Err.Error() != "marker" {
 		t.Fatalf("unexpected error: %s", res.Err)
+	}
+}
+
+// Ensure a REVOKE statement for admin privilege can be executed.
+func TestStatementExecutor_ExecuteStatement_Revoke_Admin(t *testing.T) {
+	e := NewStatementExecutor()
+	e.Store.SetAdminPrivilegeFn = func(username string, admin bool) error {
+		if username != "susy" {
+			t.Fatalf("unexpected username: %s", username)
+		} else if admin != false {
+			t.Fatalf("unexpected admin privilege: %s", admin)
+		}
+		return nil
+	}
+
+	if res := e.ExecuteStatement(influxql.MustParseStatement(`REVOKE ALL PRIVILEGES FROM susy`)); res.Err != nil {
+		t.Fatal(res.Err)
+	} else if res.Series != nil {
+		t.Fatalf("unexpected rows: %#v", res.Series)
 	}
 }
 
@@ -730,6 +768,7 @@ type StatementExecutorStore struct {
 	UpdateUserFn                func(name, password string) error
 	DropUserFn                  func(name string) error
 	SetPrivilegeFn              func(username, database string, p influxql.Privilege) error
+	SetAdminPrivilegeFn         func(username string, admin bool) error
 	UserPrivilegesFn            func(username string) (map[string]influxql.Privilege, error)
 	ContinuousQueriesFn         func() ([]meta.ContinuousQueryInfo, error)
 	CreateContinuousQueryFn     func(database, name, query string) error
@@ -794,6 +833,10 @@ func (s *StatementExecutorStore) DropUser(name string) error {
 
 func (s *StatementExecutorStore) SetPrivilege(username, database string, p influxql.Privilege) error {
 	return s.SetPrivilegeFn(username, database, p)
+}
+
+func (s *StatementExecutorStore) SetAdminPrivilege(username string, admin bool) error {
+	return s.SetAdminPrivilegeFn(username, admin)
 }
 
 func (s *StatementExecutorStore) UserPrivileges(username string) (map[string]influxql.Privilege, error) {
