@@ -27,6 +27,7 @@ type StatementExecutor struct {
 		UpdateUser(name, password string) error
 		DropUser(name string) error
 		SetPrivilege(username, database string, p influxql.Privilege) error
+		SetAdminPrivilege(username string, admin bool) error
 		UserPrivileges(username string) (map[string]influxql.Privilege, error)
 
 		CreateContinuousQuery(database, name, query string) error
@@ -57,8 +58,12 @@ func (e *StatementExecutor) ExecuteStatement(stmt influxql.Statement) *influxql.
 		return e.executeShowUsersStatement(stmt)
 	case *influxql.GrantStatement:
 		return e.executeGrantStatement(stmt)
+	case *influxql.GrantAdminStatement:
+		return e.executeGrantAdminStatement(stmt)
 	case *influxql.RevokeStatement:
 		return e.executeRevokeStatement(stmt)
+	case *influxql.RevokeAdminStatement:
+		return e.executeRevokeAdminStatement(stmt)
 	case *influxql.CreateRetentionPolicyStatement:
 		return e.executeCreateRetentionPolicyStatement(stmt)
 	case *influxql.AlterRetentionPolicyStatement:
@@ -163,8 +168,17 @@ func (e *StatementExecutor) executeGrantStatement(stmt *influxql.GrantStatement)
 	return &influxql.Result{Err: e.Store.SetPrivilege(stmt.User, stmt.On, stmt.Privilege)}
 }
 
+func (e *StatementExecutor) executeGrantAdminStatement(stmt *influxql.GrantAdminStatement) *influxql.Result {
+	return &influxql.Result{Err: e.Store.SetAdminPrivilege(stmt.User, true)}
+}
+
 func (e *StatementExecutor) executeRevokeStatement(stmt *influxql.RevokeStatement) *influxql.Result {
+	// A revoke statement always sets the privilege to no privilege.
 	return &influxql.Result{Err: e.Store.SetPrivilege(stmt.User, stmt.On, influxql.NoPrivileges)}
+}
+
+func (e *StatementExecutor) executeRevokeAdminStatement(stmt *influxql.RevokeAdminStatement) *influxql.Result {
+	return &influxql.Result{Err: e.Store.SetAdminPrivilege(stmt.User, false)}
 }
 
 func (e *StatementExecutor) executeCreateRetentionPolicyStatement(stmt *influxql.CreateRetentionPolicyStatement) *influxql.Result {

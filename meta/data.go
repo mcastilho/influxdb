@@ -478,6 +478,18 @@ func (data *Data) SetPrivilege(name, database string, p influxql.Privilege) erro
 	return nil
 }
 
+// SetAdminPrivilege sets the admin privilege for a user.
+func (data *Data) SetAdminPrivilege(name string, admin bool) error {
+	ui := data.User(name)
+	if ui == nil {
+		return ErrUserNotFound
+	}
+
+	ui.Admin = admin
+
+	return nil
+}
+
 // UserPrivileges get privileges for a user.
 func (data *Data) UserPrivileges(name string) (map[string]influxql.Privilege, error) {
 	ui := data.User(name)

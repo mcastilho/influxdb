@@ -92,7 +92,9 @@ func (*DropRetentionPolicyStatement) node()   {}
 func (*DropSeriesStatement) node()            {}
 func (*DropUserStatement) node()              {}
 func (*GrantStatement) node()                 {}
+func (*GrantAdminStatement) node()            {}
 func (*RevokeStatement) node()                {}
+func (*RevokeAdminStatement) node()           {}
 func (*SelectStatement) node()                {}
 func (*SetPasswordUserStatement) node()       {}
 func (*ShowContinuousQueriesStatement) node() {}
@@ -193,6 +195,7 @@ func (*DropRetentionPolicyStatement) stmt()   {}
 func (*DropSeriesStatement) stmt()            {}
 func (*DropUserStatement) stmt()              {}
 func (*GrantStatement) stmt()                 {}
+func (*GrantAdminStatement) stmt()            {}
 func (*ShowContinuousQueriesStatement) stmt() {}
 func (*ShowGrantsForUserStatement) stmt()     {}
 func (*ShowServersStatement) stmt()           {}
@@ -207,6 +210,7 @@ func (*ShowTagKeysStatement) stmt()           {}
 func (*ShowTagValuesStatement) stmt()         {}
 func (*ShowUsersStatement) stmt()             {}
 func (*RevokeStatement) stmt()                {}
+func (*RevokeAdminStatement) stmt()           {}
 func (*SelectStatement) stmt()                {}
 func (*SetPasswordUserStatement) stmt()       {}
 
@@ -437,7 +441,7 @@ type GrantStatement struct {
 	// The privilege to be granted.
 	Privilege Privilege
 
-	// Thing to grant privilege on (e.g., a DB).
+	// Database to grant the privilege to.
 	On string
 
 	// Who to grant the privilege to.
@@ -449,10 +453,8 @@ func (s *GrantStatement) String() string {
 	var buf bytes.Buffer
 	_, _ = buf.WriteString("GRANT ")
 	_, _ = buf.WriteString(s.Privilege.String())
-	if s.On != "" {
-		_, _ = buf.WriteString(" ON ")
-		_, _ = buf.WriteString(s.On)
-	}
+	_, _ = buf.WriteString(" ON ")
+	_, _ = buf.WriteString(s.On)
 	_, _ = buf.WriteString(" TO ")
 	_, _ = buf.WriteString(s.User)
 	return buf.String()
@@ -460,6 +462,25 @@ func (s *GrantStatement) String() string {
 
 // RequiredPrivileges returns the privilege required to execute a GrantStatement.
 func (s *GrantStatement) RequiredPrivileges() ExecutionPrivileges {
+	return ExecutionPrivileges{{Name: "", Privilege: AllPrivileges}}
+}
+
+// GrantAdminStatement represents a command for granting admin privilege.
+type GrantAdminStatement struct {
+	// Who to grant the privilege to.
+	User string
+}
+
+// String returns a string representation of the grant admin statement.
+func (s *GrantAdminStatement) String() string {
+	var buf bytes.Buffer
+	_, _ = buf.WriteString("GRANT ALL PRIVILEGES TO ")
+	_, _ = buf.WriteString(s.User)
+	return buf.String()
+}
+
+// RequiredPrivileges returns the privilege required to execute a GrantAdminStatement.
+func (s *GrantAdminStatement) RequiredPrivileges() ExecutionPrivileges {
 	return ExecutionPrivileges{{Name: "", Privilege: AllPrivileges}}
 }
 
@@ -482,17 +503,14 @@ func (s *SetPasswordUserStatement) String() string {
 	return buf.String()
 }
 
-// RequiredPrivileges returns the privilege required to execute a GrantStatement.
+// RequiredPrivileges returns the privilege required to execute a SetPasswordUserStatement.
 func (s *SetPasswordUserStatement) RequiredPrivileges() ExecutionPrivileges {
 	return ExecutionPrivileges{{Name: "", Privilege: AllPrivileges}}
 }
 
 // RevokeStatement represents a command to revoke a privilege from a user.
 type RevokeStatement struct {
-	// Privilege to be revoked.
-	Privilege Privilege
-
-	// Thing to revoke privilege to (e.g., a DB)
+	// Database to revoke the privilege from.
 	On string
 
 	// Who to revoke privilege from.
@@ -502,12 +520,8 @@ type RevokeStatement struct {
 // String returns a string representation of the revoke statement.
 func (s *RevokeStatement) String() string {
 	var buf bytes.Buffer
-	_, _ = buf.WriteString("REVOKE ")
-	_, _ = buf.WriteString(s.Privilege.String())
-	if s.On != "" {
-		_, _ = buf.WriteString(" ON ")
-		_, _ = buf.WriteString(s.On)
-	}
+	_, _ = buf.WriteString("REVOKE PRIVILEGE ON ")
+	_, _ = buf.WriteString(s.On)
 	_, _ = buf.WriteString(" FROM ")
 	_, _ = buf.WriteString(s.User)
 	return buf.String()
@@ -515,6 +529,25 @@ func (s *RevokeStatement) String() string {
 
 // RequiredPrivileges returns the privilege required to execute a RevokeStatement.
 func (s *RevokeStatement) RequiredPrivileges() ExecutionPrivileges {
+	return ExecutionPrivileges{{Name: "", Privilege: AllPrivileges}}
+}
+
+// RevokeAdminStatement represents a command to revoke admin privilege from a user.
+type RevokeAdminStatement struct {
+	// Who to revoke admin privilege from.
+	User string
+}
+
+// String returns a string representation of the revoke admin statement.
+func (s *RevokeAdminStatement) String() string {
+	var buf bytes.Buffer
+	_, _ = buf.WriteString("REVOKE ALL PRIVILEGES FROM ")
+	_, _ = buf.WriteString(s.User)
+	return buf.String()
+}
+
+// RequiredPrivileges returns the privilege required to execute a RevokeAdminStatement.
+func (s *RevokeAdminStatement) RequiredPrivileges() ExecutionPrivileges {
 	return ExecutionPrivileges{{Name: "", Privilege: AllPrivileges}}
 }
 
