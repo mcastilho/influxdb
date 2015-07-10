@@ -319,7 +319,7 @@ func TestStatementExecutor_ExecuteStatement_Grant_Admin(t *testing.T) {
 		if username != "susy" {
 			t.Fatalf("unexpected username: %s", username)
 		} else if admin != true {
-			t.Fatalf("unexpected admin privilege: %s", admin)
+			t.Fatalf("unexpected admin privilege: %t", admin)
 		}
 		return nil
 	}
@@ -371,7 +371,7 @@ func TestStatementExecutor_ExecuteStatement_Revoke_Admin(t *testing.T) {
 		if username != "susy" {
 			t.Fatalf("unexpected username: %s", username)
 		} else if admin != false {
-			t.Fatalf("unexpected admin privilege: %s", admin)
+			t.Fatalf("unexpected admin privilege: %t", admin)
 		}
 		return nil
 	}
