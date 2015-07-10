@@ -173,7 +173,7 @@ func (e *StatementExecutor) executeGrantAdminStatement(stmt *influxql.GrantAdmin
 }
 
 func (e *StatementExecutor) executeRevokeStatement(stmt *influxql.RevokeStatement) *influxql.Result {
-	// A revoke statement always sets the privilege to no privilege.
+	// A revoke statement always sets the privilege to no privileges.
 	return &influxql.Result{Err: e.Store.SetPrivilege(stmt.User, stmt.On, influxql.NoPrivileges)}
 }
 
