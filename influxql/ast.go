@@ -510,6 +510,9 @@ func (s *SetPasswordUserStatement) RequiredPrivileges() ExecutionPrivileges {
 
 // RevokeStatement represents a command to revoke a privilege from a user.
 type RevokeStatement struct {
+	// The privilege to be revoked.
+	Privilege Privilege
+
 	// Database to revoke the privilege from.
 	On string
 
@@ -520,7 +523,9 @@ type RevokeStatement struct {
 // String returns a string representation of the revoke statement.
 func (s *RevokeStatement) String() string {
 	var buf bytes.Buffer
-	_, _ = buf.WriteString("REVOKE PRIVILEGE ON ")
+	_, _ = buf.WriteString("REVOKE ")
+	_, _ = buf.WriteString(s.Privilege.String())
+	_, _ = buf.WriteString(" ON ")
 	_, _ = buf.WriteString(s.On)
 	_, _ = buf.WriteString(" FROM ")
 	_, _ = buf.WriteString(s.User)

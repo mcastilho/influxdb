@@ -531,7 +531,12 @@ func (p *Parser) parseRevokeStatement() (Statement, error) {
 	// Check for ON or FROM clauses.
 	tok, pos, lit := p.scanIgnoreWhitespace()
 	if tok == ON {
-		return p.parseRevokeOnStatement()
+		stmt, err := p.parseRevokeOnStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Privilege = priv
+		return stmt, nil
 	} else if tok == FROM {
 		// Admin privilege is only revoked on ALL PRIVILEGES.
 		if priv != AllPrivileges {
