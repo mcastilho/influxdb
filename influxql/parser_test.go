@@ -1030,7 +1030,15 @@ func TestParser_ParseStatement(t *testing.T) {
 			},
 		},
 
-		// GRANT admin privilege
+		// GRANT ALL admin privilege
+		{
+			s: `GRANT ALL TO jdoe`,
+			stmt: &influxql.GrantAdminStatement{
+				User: "jdoe",
+			},
+		},
+
+		// GRANT ALL PRVILEGES admin privilege
 		{
 			s: `GRANT ALL PRIVILEGES TO jdoe`,
 			stmt: &influxql.GrantAdminStatement{
@@ -1042,8 +1050,9 @@ func TestParser_ParseStatement(t *testing.T) {
 		{
 			s: `REVOKE READ on testdb FROM jdoe`,
 			stmt: &influxql.RevokeStatement{
-				On:   "testdb",
-				User: "jdoe",
+				Privilege: influxql.ReadPrivilege,
+				On:        "testdb",
+				User:      "jdoe",
 			},
 		},
 
@@ -1051,8 +1060,9 @@ func TestParser_ParseStatement(t *testing.T) {
 		{
 			s: `REVOKE WRITE ON testdb FROM jdoe`,
 			stmt: &influxql.RevokeStatement{
-				On:   "testdb",
-				User: "jdoe",
+				Privilege: influxql.WritePrivilege,
+				On:        "testdb",
+				User:      "jdoe",
 			},
 		},
 
@@ -1060,8 +1070,9 @@ func TestParser_ParseStatement(t *testing.T) {
 		{
 			s: `REVOKE ALL ON testdb FROM jdoe`,
 			stmt: &influxql.RevokeStatement{
-				On:   "testdb",
-				User: "jdoe",
+				Privilege: influxql.AllPrivileges,
+				On:        "testdb",
+				User:      "jdoe",
 			},
 		},
 
@@ -1069,14 +1080,23 @@ func TestParser_ParseStatement(t *testing.T) {
 		{
 			s: `REVOKE ALL PRIVILEGES ON testdb FROM jdoe`,
 			stmt: &influxql.RevokeStatement{
-				On:   "testdb",
+				Privilege: influxql.AllPrivileges,
+				On:        "testdb",
+				User:      "jdoe",
+			},
+		},
+
+		// REVOKE ALL admin privilege
+		{
+			s: `REVOKE ALL FROM jdoe`,
+			stmt: &influxql.RevokeAdminStatement{
 				User: "jdoe",
 			},
 		},
 
-		// REVOKE admin privilege
+		// REVOKE ALL PRIVILEGES admin privilege
 		{
-			s: `REVOKE ALL FROM jdoe`,
+			s: `REVOKE ALL PRIVILEGES FROM jdoe`,
 			stmt: &influxql.RevokeAdminStatement{
 				User: "jdoe",
 			},
@@ -1253,16 +1273,67 @@ func TestParser_ParseStatement(t *testing.T) {
 		{s: `GRANT`, err: `found EOF, expected READ, WRITE, ALL [PRIVILEGES] at line 1, char 7`},
 		{s: `GRANT BOGUS`, err: `found BOGUS, expected READ, WRITE, ALL [PRIVILEGES] at line 1, char 7`},
 		{s: `GRANT READ`, err: `found EOF, expected ON at line 1, char 12`},
-		{s: `GRANT READ TO jdoe`, err: `found TO, expected ON at line 1, char 12`},
+		{s: `GRANT READ FROM`, err: `found FROM, expected ON at line 1, char 12`},
 		{s: `GRANT READ ON`, err: `found EOF, expected identifier at line 1, char 15`},
+		{s: `GRANT READ ON TO`, err: `found TO, expected identifier at line 1, char 15`},
 		{s: `GRANT READ ON testdb`, err: `found EOF, expected TO at line 1, char 22`},
-		{s: `GRANT READ ON testdb TO`, err: `found EOF, expected identifier at line 1, char 25`}, {s: `GRANT`, err: `found EOF, expected READ, WRITE, ALL [PRIVILEGES] at line 1, char 7`},
+		{s: `GRANT READ ON testdb TO`, err: `found EOF, expected identifier at line 1, char 25`},
+		{s: `GRANT READ TO`, err: `found TO, expected ON at line 1, char 12`},
+		{s: `GRANT WRITE`, err: `found EOF, expected ON at line 1, char 13`},
+		{s: `GRANT WRITE FROM`, err: `found FROM, expected ON at line 1, char 13`},
+		{s: `GRANT WRITE ON`, err: `found EOF, expected identifier at line 1, char 16`},
+		{s: `GRANT WRITE ON TO`, err: `found TO, expected identifier at line 1, char 16`},
+		{s: `GRANT WRITE ON testdb`, err: `found EOF, expected TO at line 1, char 23`},
+		{s: `GRANT WRITE ON testdb TO`, err: `found EOF, expected identifier at line 1, char 26`},
+		{s: `GRANT WRITE TO`, err: `found TO, expected ON at line 1, char 13`},
+		{s: `GRANT ALL`, err: `found EOF, expected ON, TO at line 1, char 11`},
+		{s: `GRANT ALL PRIVILEGES`, err: `found EOF, expected ON, TO at line 1, char 22`},
+		{s: `GRANT ALL FROM`, err: `found FROM, expected ON, TO at line 1, char 11`},
+		{s: `GRANT ALL PRIVILEGES FROM`, err: `found FROM, expected ON, TO at line 1, char 22`},
+		{s: `GRANT ALL ON`, err: `found EOF, expected identifier at line 1, char 14`},
+		{s: `GRANT ALL PRIVILEGES ON`, err: `found EOF, expected identifier at line 1, char 25`},
+		{s: `GRANT ALL ON TO`, err: `found TO, expected identifier at line 1, char 14`},
+		{s: `GRANT ALL PRIVILEGES ON TO`, err: `found TO, expected identifier at line 1, char 25`},
+		{s: `GRANT ALL ON testdb`, err: `found EOF, expected TO at line 1, char 21`},
+		{s: `GRANT ALL PRIVILEGES ON testdb`, err: `found EOF, expected TO at line 1, char 32`},
+		{s: `GRANT ALL ON testdb FROM`, err: `found FROM, expected TO at line 1, char 21`},
+		{s: `GRANT ALL PRIVILEGES ON testdb FROM`, err: `found FROM, expected TO at line 1, char 32`},
+		{s: `GRANT ALL ON testdb TO`, err: `found EOF, expected identifier at line 1, char 24`},
+		{s: `GRANT ALL PRIVILEGES ON testdb TO`, err: `found EOF, expected identifier at line 1, char 35`},
+		{s: `GRANT ALL TO`, err: `found EOF, expected identifier at line 1, char 14`},
+		{s: `GRANT ALL PRIVILEGES TO`, err: `found EOF, expected identifier at line 1, char 25`},
+		{s: `REVOKE`, err: `found EOF, expected READ, WRITE, ALL [PRIVILEGES] at line 1, char 8`},
 		{s: `REVOKE BOGUS`, err: `found BOGUS, expected READ, WRITE, ALL [PRIVILEGES] at line 1, char 8`},
 		{s: `REVOKE READ`, err: `found EOF, expected ON at line 1, char 13`},
-		{s: `REVOKE READ TO jdoe`, err: `found TO, expected ON at line 1, char 13`},
+		{s: `REVOKE READ TO`, err: `found TO, expected ON at line 1, char 13`},
 		{s: `REVOKE READ ON`, err: `found EOF, expected identifier at line 1, char 16`},
+		{s: `REVOKE READ ON FROM`, err: `found FROM, expected identifier at line 1, char 16`},
 		{s: `REVOKE READ ON testdb`, err: `found EOF, expected FROM at line 1, char 23`},
 		{s: `REVOKE READ ON testdb FROM`, err: `found EOF, expected identifier at line 1, char 28`},
+		{s: `REVOKE READ FROM`, err: `found FROM, expected ON at line 1, char 13`},
+		{s: `REVOKE WRITE`, err: `found EOF, expected ON at line 1, char 14`},
+		{s: `REVOKE WRITE TO`, err: `found TO, expected ON at line 1, char 14`},
+		{s: `REVOKE WRITE ON`, err: `found EOF, expected identifier at line 1, char 17`},
+		{s: `REVOKE WRITE ON FROM`, err: `found FROM, expected identifier at line 1, char 17`},
+		{s: `REVOKE WRITE ON testdb`, err: `found EOF, expected FROM at line 1, char 24`},
+		{s: `REVOKE WRITE ON testdb FROM`, err: `found EOF, expected identifier at line 1, char 29`},
+		{s: `REVOKE WRITE FROM`, err: `found FROM, expected ON at line 1, char 14`},
+		{s: `REVOKE ALL`, err: `found EOF, expected ON, FROM at line 1, char 12`},
+		{s: `REVOKE ALL PRIVILEGES`, err: `found EOF, expected ON, FROM at line 1, char 23`},
+		{s: `REVOKE ALL TO`, err: `found TO, expected ON, FROM at line 1, char 12`},
+		{s: `REVOKE ALL PRIVILEGES TO`, err: `found TO, expected ON, FROM at line 1, char 23`},
+		{s: `REVOKE ALL ON`, err: `found EOF, expected identifier at line 1, char 15`},
+		{s: `REVOKE ALL PRIVILEGES ON`, err: `found EOF, expected identifier at line 1, char 26`},
+		{s: `REVOKE ALL ON FROM`, err: `found FROM, expected identifier at line 1, char 15`},
+		{s: `REVOKE ALL PRIVILEGES ON FROM`, err: `found FROM, expected identifier at line 1, char 26`},
+		{s: `REVOKE ALL ON testdb`, err: `found EOF, expected FROM at line 1, char 22`},
+		{s: `REVOKE ALL PRIVILEGES ON testdb`, err: `found EOF, expected FROM at line 1, char 33`},
+		{s: `REVOKE ALL ON testdb TO`, err: `found TO, expected FROM at line 1, char 22`},
+		{s: `REVOKE ALL PRIVILEGES ON testdb TO`, err: `found TO, expected FROM at line 1, char 33`},
+		{s: `REVOKE ALL ON testdb FROM`, err: `found EOF, expected identifier at line 1, char 27`},
+		{s: `REVOKE ALL PRIVILEGES ON testdb FROM`, err: `found EOF, expected identifier at line 1, char 38`},
+		{s: `REVOKE ALL FROM`, err: `found EOF, expected identifier at line 1, char 17`},
+		{s: `REVOKE ALL PRIVILEGES FROM`, err: `found EOF, expected identifier at line 1, char 28`},
 		{s: `CREATE RETENTION`, err: `found EOF, expected POLICY at line 1, char 18`},
 		{s: `CREATE RETENTION POLICY`, err: `found EOF, expected identifier at line 1, char 25`},
 		{s: `CREATE RETENTION POLICY policy1`, err: `found EOF, expected ON at line 1, char 33`},

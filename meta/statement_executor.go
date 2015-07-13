@@ -176,7 +176,7 @@ func (e *StatementExecutor) executeGrantAdminStatement(stmt *influxql.GrantAdmin
 func (e *StatementExecutor) executeRevokeStatement(stmt *influxql.RevokeStatement) *influxql.Result {
 	priv := influxql.NoPrivileges
 
-	// Revoking all privileges means privilege is set to no privileges.
+	// Revoking all privileges means there's no need to look at existing user privileges.
 	if stmt.Privilege != influxql.AllPrivileges {
 		p, err := e.Store.UserPrivilege(stmt.User, stmt.On)
 		if err != nil {
