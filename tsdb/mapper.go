@@ -10,12 +10,12 @@ import (
 	"github.com/influxdb/influxdb/influxql"
 )
 
-type mapperValue struct {
+type rawMapperValue struct {
 	Time  int64       `json:"time,omitempty"`
 	Value interface{} `json:"value,omitempty"`
 }
 
-type rawMapperValues []*mapperValue
+type rawMapperValues []*rawMapperValue
 
 func (a rawMapperValues) Len() int           { return len(a) }
 func (a rawMapperValues) Less(i, j int) bool { return a[i].Time < a[j].Time }
@@ -173,7 +173,7 @@ func (rm *RawMapper) NextChunk() (interface{}, error) {
 				Tags: cursor.tags,
 			}
 		}
-		value := &mapperValue{Time: k, Value: v}
+		value := &rawMapperValue{Time: k, Value: v}
 		output.Values = append(output.Values, value)
 		if len(output.Values) == rm.chunkSize {
 			return output, nil

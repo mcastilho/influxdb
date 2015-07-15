@@ -713,21 +713,21 @@ type limitedRowWriter struct {
 	fields      influxql.Fields
 	c           chan *influxql.Row
 
-	currValues  []*mapperValue
+	currValues  []*rawMapperValue
 	totalOffSet int
 	totalSent   int
 
 	transformer interface {
-		process(input []*mapperValue) []*mapperValue
+		process(input []*rawMapperValue) []*rawMapperValue
 	}
 }
 
 // Add accepts a slice of values, and will emit those values as per chunking requirements.
 // If limited is returned as true, the limit was also reached and no more values should be
 // add. In that case only up the limit of values are emitted.
-func (r *limitedRowWriter) Add(values []*mapperValue) (limited bool) {
+func (r *limitedRowWriter) Add(values []*rawMapperValue) (limited bool) {
 	if r.currValues == nil {
-		r.currValues = make([]*mapperValue, 0, r.chunkSize)
+		r.currValues = make([]*rawMapperValue, 0, r.chunkSize)
 	}
 
 	// Enforce offset.
@@ -799,7 +799,7 @@ func (r *limitedRowWriter) Flush() {
 }
 
 // processValues emits the given values in a single row.
-func (r *limitedRowWriter) processValues(values []*mapperValue) *influxql.Row {
+func (r *limitedRowWriter) processValues(values []*rawMapperValue) *influxql.Row {
 	defer func() {
 		r.totalSent += len(values)
 	}()
@@ -880,12 +880,12 @@ func (r *limitedRowWriter) processValues(values []*mapperValue) *influxql.Row {
 }
 
 type rawQueryDerivativeProcessor struct {
-	lastValueFromPreviousChunk *mapperValue
+	lastValueFromPreviousChunk *rawMapperValue
 	isNonNegative              bool // Whether to drop negative differences
 	derivativeInterval         time.Duration
 }
 
-func (rqdp *rawQueryDerivativeProcessor) process(input []*mapperValue) []*mapperValue {
+func (rqdp *rawQueryDerivativeProcessor) process(input []*rawMapperValue) []*rawMapperValue {
 	if len(input) == 0 {
 		return input
 	}
@@ -893,8 +893,8 @@ func (rqdp *rawQueryDerivativeProcessor) process(input []*mapperValue) []*mapper
 	// If we only have 1 value, then the value did not change, so return
 	// a single row with 0.0
 	if len(input) == 1 {
-		return []*mapperValue{
-			&mapperValue{
+		return []*rawMapperValue{
+			&rawMapperValue{
 				Time:  input[0].Time,
 				Value: 0.0,
 			},
@@ -905,7 +905,7 @@ func (rqdp *rawQueryDerivativeProcessor) process(input []*mapperValue) []*mapper
 		rqdp.lastValueFromPreviousChunk = input[0]
 	}
 
-	derivativeValues := []*mapperValue{}
+	derivativeValues := []*rawMapperValue{}
 	for i := 1; i < len(input); i++ {
 		v := input[i]
 
@@ -927,7 +927,7 @@ func (rqdp *rawQueryDerivativeProcessor) process(input []*mapperValue) []*mapper
 			continue
 		}
 
-		derivativeValues = append(derivativeValues, &mapperValue{
+		derivativeValues = append(derivativeValues, &rawMapperValue{
 			Time:  v.Time,
 			Value: value,
 		})
