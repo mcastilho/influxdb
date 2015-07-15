@@ -102,13 +102,7 @@ func (p *Planner) planRawQuery(stmt *influxql.SelectStatement, shards map[uint64
 	mappers := []*RawMapper{}
 	for _, sh := range shards {
 		if sh.OwnedBy(p.MetaStore.NodeID()) {
-			shard := p.store.Shard(sh.ID)
-			if shard == nil {
-				// If the store returns nil, no data has actually been written to the shard.
-				// In this case, since there is no data, don't make a mapper.
-				continue
-			}
-			mappers = append(mappers, NewRawMapper(shard, stmt, chunkSize))
+			mappers = append(mappers, p.store.CreateRawMapper(sh.ID, stmt, chunkSize))
 		} else {
 			mapper, err := p.Cluster.NewRawMapper(sh.ID, stmt.String())
 			if err != nil {
@@ -129,13 +123,7 @@ func (p *Planner) planAggregateQuery(stmt *influxql.SelectStatement, shards map[
 	mappers := []*AggMapper{}
 	for _, sh := range shards {
 		if sh.OwnedBy(p.MetaStore.NodeID()) {
-			shard := p.store.Shard(sh.ID)
-			if shard == nil {
-				// If the store returns nil, no data has actually been written to the shard.
-				// In this case, since there is no data, don't make a mapper.
-				continue
-			}
-			mappers = append(mappers, NewAggMapper(shard, stmt))
+			mappers = append(mappers, p.store.CreateAggMapper(sh.ID, stmt))
 		} else {
 			mapper, err := p.Cluster.NewAggMapper(sh.ID, stmt.String())
 			if err != nil {

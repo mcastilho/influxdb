@@ -303,13 +303,22 @@ func (s *Store) CreateMapper(shardID uint64, query string, chunkSize int) (Mappe
 		return nil, fmt.Errorf("query is not a SELECT statement: %s", err.Error())
 	}
 
+	if stmt.IsRawQuery && !stmt.HasDistinct() {
+		return s.CreateRawMapper(shardID, stmt, chunkSize), nil
+	}
+	return s.CreateAggMapper(shardID, stmt), nil
+}
+
+func (s *Store) CreateRawMapper(shardID uint64, stmt *influxql.SelectStatement, chunkSize int) *RawMapper {
 	// Get shard
 	shard := s.Shard(shardID)
+	return NewRawMapper(shard, stmt, chunkSize)
+}
 
-	if stmt.IsRawQuery && !stmt.HasDistinct() {
-		return NewRawMapper(shard, stmt, chunkSize), nil
-	}
-	return NewAggMapper(shard, stmt), nil
+func (s *Store) CreateAggMapper(shardID uint64, stmt *influxql.SelectStatement) *AggMapper {
+	// Get shard
+	shard := s.Shard(shardID)
+	return NewAggMapper(shard, stmt)
 }
 
 func (s *Store) Close() error {
