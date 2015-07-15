@@ -94,8 +94,8 @@ func NewHandler(requireAuthentication, loggingEnabled, writeTrace bool) *Handler
 			"GET", "/query", true, true, h.serveQuery,
 		},
 		route{
-			"map", // Shard mapping route.
-			"GET", "/map", true, true, h.serveMap,
+			"shard-mapping", // Shard mapping route.
+			"GET", "/shard_mapping", true, true, h.serveShardMapping,
 		},
 		route{
 			"write", // Data-ingest route.
@@ -301,8 +301,8 @@ func (h *Handler) serveQuery(w http.ResponseWriter, r *http.Request, user *meta.
 	}
 }
 
-// serveMap maps the requested shard and streams data back to the client.
-func (h *Handler) serveMap(w http.ResponseWriter, r *http.Request) {
+// serveShardMapping maps the requested shard and streams data back to the client.
+func (h *Handler) serveShardMapping(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) serveWrite(w http.ResponseWriter, r *http.Request, user *meta.UserInfo) {
