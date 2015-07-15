@@ -453,29 +453,29 @@ func TestProcessRawQueryDerivative(t *testing.T) {
 		name     string
 		fn       string
 		interval time.Duration
-		in       []*mapperValue
-		exp      []*mapperValue
+		in       []*rawMapperValue
+		exp      []*rawMapperValue
 	}{
 		{
 			name:     "empty input",
 			fn:       "derivative",
 			interval: 24 * time.Hour,
-			in:       []*mapperValue{},
-			exp:      []*mapperValue{},
+			in:       []*rawMapperValue{},
+			exp:      []*rawMapperValue{},
 		},
 
 		{
 			name:     "single row returns 0.0",
 			fn:       "derivative",
 			interval: 24 * time.Hour,
-			in: []*mapperValue{
-				&mapperValue{
+			in: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Unix(),
 					Value: 1.0,
 				},
 			},
-			exp: []*mapperValue{
-				&mapperValue{
+			exp: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Unix(),
 					Value: 0.0,
 				},
@@ -485,34 +485,34 @@ func TestProcessRawQueryDerivative(t *testing.T) {
 			name:     "basic derivative",
 			fn:       "derivative",
 			interval: 24 * time.Hour,
-			in: []*mapperValue{
-				&mapperValue{
+			in: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Unix(),
 					Value: 0.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(24 * time.Hour).UnixNano(),
 					Value: 3.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(48 * time.Hour).UnixNano(),
 					Value: 5.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(72 * time.Hour).UnixNano(),
 					Value: 9.0,
 				},
 			},
-			exp: []*mapperValue{
-				&mapperValue{
+			exp: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(24 * time.Hour).UnixNano(),
 					Value: 3.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(48 * time.Hour).UnixNano(),
 					Value: 2.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(72 * time.Hour).UnixNano(),
 					Value: 4.0,
 				},
@@ -522,34 +522,34 @@ func TestProcessRawQueryDerivative(t *testing.T) {
 			name:     "12h interval",
 			fn:       "derivative",
 			interval: 12 * time.Hour,
-			in: []*mapperValue{
-				&mapperValue{
+			in: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).UnixNano(),
 					Value: 1.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(24 * time.Hour).UnixNano(),
 					Value: 2.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(48 * time.Hour).UnixNano(),
 					Value: 3.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(72 * time.Hour).UnixNano(),
 					Value: 4.0,
 				},
 			},
-			exp: []*mapperValue{
-				&mapperValue{
+			exp: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(24 * time.Hour).UnixNano(),
 					Value: 0.5,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(48 * time.Hour).UnixNano(),
 					Value: 0.5,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(72 * time.Hour).UnixNano(),
 					Value: 0.5,
 				},
@@ -559,35 +559,35 @@ func TestProcessRawQueryDerivative(t *testing.T) {
 			name:     "negative derivatives",
 			fn:       "derivative",
 			interval: 24 * time.Hour,
-			in: []*mapperValue{
-				&mapperValue{
+			in: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Unix(),
 					Value: 1.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(24 * time.Hour).UnixNano(),
 					Value: 2.0,
 				},
 				// should go negative
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(48 * time.Hour).UnixNano(),
 					Value: 0.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(72 * time.Hour).UnixNano(),
 					Value: 4.0,
 				},
 			},
-			exp: []*mapperValue{
-				&mapperValue{
+			exp: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(24 * time.Hour).UnixNano(),
 					Value: 1.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(48 * time.Hour).UnixNano(),
 					Value: -2.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(72 * time.Hour).UnixNano(),
 					Value: 4.0,
 				},
@@ -597,31 +597,31 @@ func TestProcessRawQueryDerivative(t *testing.T) {
 			name:     "negative derivatives",
 			fn:       "non_negative_derivative",
 			interval: 24 * time.Hour,
-			in: []*mapperValue{
-				&mapperValue{
+			in: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Unix(),
 					Value: 1.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(24 * time.Hour).UnixNano(),
 					Value: 2.0,
 				},
 				// should go negative
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(48 * time.Hour).UnixNano(),
 					Value: 0.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(72 * time.Hour).UnixNano(),
 					Value: 4.0,
 				},
 			},
-			exp: []*mapperValue{
-				&mapperValue{
+			exp: []*rawMapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(24 * time.Hour).UnixNano(),
 					Value: 1.0,
 				},
-				&mapperValue{
+				&rawMapperValue{
 					Time:  time.Unix(0, 0).Add(72 * time.Hour).UnixNano(),
 					Value: 4.0,
 				},
