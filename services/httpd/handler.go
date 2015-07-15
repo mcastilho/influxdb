@@ -63,8 +63,8 @@ type Handler struct {
 		ExecuteQuery(q *influxql.Query, db string, chunkSize int) (<-chan *influxql.Result, error)
 	}
 
-	ShardMapper interface {
-		Map(shardID, stmt string) (<-chan interface{}, error)
+	TSDBStore interface {
+		CreateMapper(shardID uint64, stmt string) tsdb.Mapper
 	}
 
 	PointsWriter interface {
