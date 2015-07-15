@@ -24,6 +24,12 @@ const (
 	IgnoredChunkSize = 0
 )
 
+type Mapper interface {
+	Open() error
+	NextChunk() (interface{}, error)
+	Close()
+}
+
 type Executor interface {
 	Execute() <-chan *influxql.Row
 }

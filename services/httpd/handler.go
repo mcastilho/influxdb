@@ -63,6 +63,10 @@ type Handler struct {
 		ExecuteQuery(q *influxql.Query, db string, chunkSize int) (<-chan *influxql.Result, error)
 	}
 
+	ShardMapper interface {
+		Map(shardID, stmt string) (<-chan interface{}, error)
+	}
+
 	PointsWriter interface {
 		WritePoints(p *cluster.WritePointsRequest) error
 	}
@@ -88,6 +92,10 @@ func NewHandler(requireAuthentication, loggingEnabled, writeTrace bool) *Handler
 		route{
 			"query", // Query serving route.
 			"GET", "/query", true, true, h.serveQuery,
+		},
+		route{
+			"map", // Shard mapping route.
+			"GET", "/map", true, true, h.serveMap,
 		},
 		route{
 			"write", // Data-ingest route.
@@ -291,6 +299,10 @@ func (h *Handler) serveQuery(w http.ResponseWriter, r *http.Request, user *meta.
 	if !chunked {
 		w.Write(MarshalJSON(resp, pretty))
 	}
+}
+
+// serveMap maps the requested shard and streams data back to the client.
+func (h *Handler) serveMap(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) serveWrite(w http.ResponseWriter, r *http.Request, user *meta.UserInfo) {
