@@ -64,7 +64,7 @@ type Handler struct {
 	}
 
 	TSDBStore interface {
-		CreateMapper(shardID uint64, stmt string) tsdb.Mapper
+		CreateMapper(shardID uint64, query string, chunkSize int) (tsdb.Mapper, error)
 	}
 
 	PointsWriter interface {
@@ -303,6 +303,29 @@ func (h *Handler) serveQuery(w http.ResponseWriter, r *http.Request, user *meta.
 
 // serveShardMapping maps the requested shard and streams data back to the client.
 func (h *Handler) serveShardMapping(w http.ResponseWriter, r *http.Request) {
+	// Pull out shardID, stmt, and chunkSize.
+	mapper, err := h.TSDBStore.CreateMapper(0, "", 0)
+	if err != nil {
+		panic("error mapping") // return actual error
+	}
+
+	if err := mapper.Open(); err != nil {
+		panic("error opening mapper")
+	}
+	defer mapper.Close()
+
+	for {
+		v, err := mapper.NextChunk()
+		if err != nil {
+			panic("error getting next chunk")
+		}
+		if v == nil {
+			// Mapper finished.
+			break
+		}
+		// Marshall v and send it out.
+		// Flush
+	}
 }
 
 func (h *Handler) serveWrite(w http.ResponseWriter, r *http.Request, user *meta.UserInfo) {
